@@ -2,6 +2,8 @@ import { useState, useEffect, useMemo } from 'react'
 import { Virtuoso } from 'react-virtuoso'
 import type { Property, ListingsMeta, SearchCriteria } from './types'
 import { DEFAULT_FILTERS, COUNTY_GROUPS, applyFilters } from './types'
+
+type ListingMode = 'buy' | 'rent'
 import FilterPanel from './components/FilterPanel'
 import PropertyCard from './components/PropertyCard'
 import PropertyDetail from './components/PropertyDetail'
@@ -26,6 +28,7 @@ export default function App() {
   const [loadingCounties, setLoadingCounties] = useState(false)
   const [countyError, setCountyError] = useState<string | null>(null)
 
+  const [listingMode, setListingMode] = useState<ListingMode>('buy')
   const [filters, setFilters] = useState<SearchCriteria>(loadSavedFilters)
   const [selected, setSelected] = useState<Property | null>(null)
   const [filterOpen, setFilterOpen] = useState(false)
@@ -47,6 +50,13 @@ export default function App() {
     } catch {}
   }, [filters])
 
+  // Clear county selection and listings when mode changes
+  useEffect(() => {
+    setFilters(f => ({ ...f, counties: [] }))
+    setListings([])
+    setCountyError(null)
+  }, [listingMode])
+
   // Stable string key so the fetch effect doesn't fire on every render
   const countiesKey = useMemo(
     () => [...filters.counties].sort().join(','),
@@ -64,9 +74,10 @@ export default function App() {
     setLoadingCounties(true)
     setCountyError(null)
     const base = import.meta.env.BASE_URL
+    const dataPath = listingMode === 'rent' ? 'data/rentals' : 'data/counties'
     Promise.all(
       keys.map(key =>
-        fetch(`${base}data/counties/${key}.json`)
+        fetch(`${base}${dataPath}/${key}.json`)
           .then(r => {
             if (!r.ok) throw new Error(`HTTP ${r.status} fetching ${key}`)
             return r.json() as Promise<Property[]>
@@ -85,7 +96,7 @@ export default function App() {
       })
       .catch(e => setCountyError(String(e)))
       .finally(() => setLoadingCounties(false))
-  }, [countiesKey])
+  }, [countiesKey, listingMode])
 
   const filtered = useMemo(
     () => applyFilters(listings, filters),
@@ -103,6 +114,22 @@ export default function App() {
           <span className="hidden sm:inline text-xs text-slate-500 border border-slate-800 rounded px-2 py-0.5">
             Tri-State · Daily Updated
           </span>
+        </div>
+        {/* Buy / Rent toggle */}
+        <div className="flex gap-0.5 bg-slate-800 rounded-lg p-0.5">
+          {(['buy', 'rent'] as const).map(m => (
+            <button
+              key={m}
+              onClick={() => setListingMode(m)}
+              className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+                listingMode === m
+                  ? 'bg-slate-600 text-white'
+                  : 'text-slate-400 hover:text-slate-300'
+              }`}
+            >
+              {m === 'buy' ? 'Buy' : 'Rent'}
+            </button>
+          ))}
         </div>
         {/* Mobile filter toggle */}
         <button
@@ -127,6 +154,7 @@ export default function App() {
             onChange={setFilters}
             resultCount={filtered.length}
             meta={meta}
+            listingMode={listingMode}
           />
         </aside>
 
@@ -136,6 +164,7 @@ export default function App() {
             filtered={filtered}
             total={listings.length}
             meta={meta}
+            listingMode={listingMode}
           />
 
           {/* Meta load error */}
@@ -218,7 +247,7 @@ export default function App() {
                 data={filtered}
                 itemContent={(_, p) => (
                   <div className="px-3 pt-2">
-                    <PropertyCard property={p} onSelect={setSelected} />
+                    <PropertyCard property={p} onSelect={setSelected} listingMode={listingMode} />
                   </div>
                 )}
                 components={{
@@ -244,6 +273,7 @@ export default function App() {
               onChange={setFilters}
               resultCount={filtered.length}
               meta={meta}
+              listingMode={listingMode}
               onClose={() => setFilterOpen(false)}
             />
           </div>

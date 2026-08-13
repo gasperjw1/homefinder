@@ -24,6 +24,7 @@ export interface Property {
   transit_score: number | null
   bike_score: number | null
   description: string | null
+  amenities: string[]
   price_per_sqft: number | null
   scraped_at: string
 }
@@ -57,6 +58,7 @@ export interface SearchCriteria {
   maxSqft: number | null
   propertyTypes: string[]
   statuses: string[]
+  amenities: string[]
   maxHoa: number | null
   maxDom: number | null
   sortBy: 'price_asc' | 'price_desc' | 'newest' | 'value'
@@ -73,6 +75,7 @@ export const DEFAULT_FILTERS: SearchCriteria = {
   maxSqft: null,
   propertyTypes: [],
   statuses: ['active', 'coming_soon'],
+  amenities: [],
   maxHoa: null,
   maxDom: null,
   sortBy: 'price_asc',
@@ -95,6 +98,21 @@ export const COUNTY_GROUPS: Array<{ label: string; abbr: string; keys: string[] 
 
 export function countyLabel(key: string): string {
   return key.split('_').map(w => w[0].toUpperCase() + w.slice(1)).join(' ')
+}
+
+export const AMENITY_TAGS = [
+  { label: 'Parking / Garage', match: ['GARAGE', 'PARKING', 'CARPORT'] },
+  { label: 'Central A/C',      match: ['CENTRAL AIR', 'AIR CONDITIONING'] },
+  { label: 'In-unit Laundry',  match: ['IN-UNIT LAUNDRY', 'IN UNIT LAUNDRY', 'WASHER/DRYER'] },
+  { label: 'Pool',             match: ['POOL'] },
+  { label: 'Gym / Fitness',    match: ['GYM', 'FITNESS', 'HEALTH CLUB'] },
+  { label: 'Doorman',          match: ['DOORMAN', 'CONCIERGE'] },
+  { label: 'Elevator',         match: ['ELEVATOR'] },
+  { label: 'Pets OK',          match: ['PET', 'DOG', 'CAT'] },
+] as const
+
+export function hasAmenity(amenities: string[], matchTerms: readonly string[]): boolean {
+  return amenities.some(a => matchTerms.some(m => a.includes(m)))
 }
 
 export const PROPERTY_TYPES = [
@@ -136,6 +154,15 @@ export function applyFilters(listings: Property[], filters: SearchCriteria): Pro
 
     if (filters.propertyTypes.length > 0 && !filters.propertyTypes.includes(p.property_type)) return false
     if (filters.statuses.length > 0 && !filters.statuses.includes(p.status)) return false
+
+    if (filters.amenities.length > 0) {
+      const pAmenities = p.amenities ?? []
+      const ok = filters.amenities.every(label => {
+        const tag = AMENITY_TAGS.find(t => t.label === label)
+        return tag ? hasAmenity(pAmenities, tag.match) : false
+      })
+      if (!ok) return false
+    }
 
     return true
   })

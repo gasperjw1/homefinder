@@ -122,6 +122,7 @@ class Property:
     transit_score: Optional[int]
     bike_score: Optional[int]
     description: Optional[str]
+    amenities: list
     scraped_at: str
 
     @property
@@ -288,6 +289,7 @@ def _parse_home(home: dict, scraped_at: str) -> Optional[Property]:
         transit_score=None,
         bike_score=None,
         description=home.get("listingRemarks"),
+        amenities=[t.upper().strip() for t in (home.get("listingTags") or []) if isinstance(t, str) and t.strip()],
         scraped_at=scraped_at,
     )
 

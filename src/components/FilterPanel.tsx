@@ -1,14 +1,15 @@
-import { type SearchCriteria, type ListingsMeta, DEFAULT_FILTERS, PROPERTY_TYPES, STATUSES, COUNTY_GROUPS, countyLabel } from '../types'
+import { type SearchCriteria, type ListingsMeta, DEFAULT_FILTERS, PROPERTY_TYPES, STATUSES, COUNTY_GROUPS, countyLabel, AMENITY_TAGS } from '../types'
 
 interface Props {
   filters: SearchCriteria
   onChange: (f: SearchCriteria) => void
   resultCount: number
   meta: ListingsMeta | null
+  listingMode: 'buy' | 'rent'
   onClose?: () => void
 }
 
-export default function FilterPanel({ filters, onChange, resultCount, meta, onClose }: Props) {
+export default function FilterPanel({ filters, onChange, resultCount, meta, listingMode, onClose }: Props) {
   const set = <K extends keyof SearchCriteria>(key: K, value: SearchCriteria[K]) =>
     onChange({ ...filters, [key]: value })
 
@@ -69,15 +70,15 @@ export default function FilterPanel({ filters, onChange, resultCount, meta, onCl
             onChange={e => set('sortBy', e.target.value as SearchCriteria['sortBy'])}
             className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
           >
-            <option value="price_asc">Price: Low to High</option>
-            <option value="price_desc">Price: High to Low</option>
+            <option value="price_asc">{listingMode === 'rent' ? 'Rent: Low to High' : 'Price: Low to High'}</option>
+            <option value="price_desc">{listingMode === 'rent' ? 'Rent: High to Low' : 'Price: High to Low'}</option>
             <option value="newest">Newest Listed</option>
-            <option value="value">Best Value ($/ft²)</option>
+            {listingMode === 'buy' && <option value="value">Best Value ($/ft²)</option>}
           </select>
         </Section>
 
-        {/* Price */}
-        <Section label="Price">
+        {/* Price / Rent */}
+        <Section label={listingMode === 'rent' ? 'Monthly Rent' : 'Price'}>
           <div className="flex gap-2">
             <NumInput
               placeholder="Min"
@@ -150,7 +151,35 @@ export default function FilterPanel({ filters, onChange, resultCount, meta, onCl
           </div>
         </Section>
 
-        {/* Status */}
+        {/* Amenities */}
+        <Section label="Amenities">
+          <div className="flex flex-wrap gap-1.5">
+            {AMENITY_TAGS.map(tag => {
+              const active = filters.amenities.includes(tag.label)
+              return (
+                <button
+                  key={tag.label}
+                  onClick={() => {
+                    const next = active
+                      ? filters.amenities.filter(a => a !== tag.label)
+                      : [...filters.amenities, tag.label]
+                    set('amenities', next)
+                  }}
+                  className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                    active
+                      ? 'bg-blue-600 border-blue-600 text-white'
+                      : 'border-slate-600 text-slate-400 hover:border-slate-400 hover:text-slate-300'
+                  }`}
+                >
+                  {tag.label}
+                </button>
+              )
+            })}
+          </div>
+        </Section>
+
+        {/* Status — buy only */}
+        {listingMode === 'buy' && (
         <Section label="Status">
           <div className="flex flex-col gap-1.5">
             {STATUSES.map(s => (
@@ -168,8 +197,10 @@ export default function FilterPanel({ filters, onChange, resultCount, meta, onCl
             ))}
           </div>
         </Section>
+        )}
 
-        {/* Property Type */}
+        {/* Property Type — buy only */}
+        {listingMode === 'buy' && (
         <Section label="Property Type">
           <div className="flex flex-col gap-1.5">
             {PROPERTY_TYPES.map(t => (
@@ -187,8 +218,10 @@ export default function FilterPanel({ filters, onChange, resultCount, meta, onCl
             ))}
           </div>
         </Section>
+        )}
 
-        {/* Max HOA */}
+        {/* Max HOA — buy only */}
+        {listingMode === 'buy' && (
         <Section label="Max HOA / month">
           <NumInput
             placeholder="e.g. 500"
@@ -198,6 +231,7 @@ export default function FilterPanel({ filters, onChange, resultCount, meta, onCl
             className="w-full"
           />
         </Section>
+        )}
 
         {/* Days on Market */}
         <Section label="Max Days on Market">

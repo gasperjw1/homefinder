@@ -5,9 +5,10 @@ import { fmtPrice, fmtNum, STATUS_CONFIG, TYPE_LABELS } from '../types'
 interface Props {
   property: Property
   onSelect: (p: Property) => void
+  listingMode: 'buy' | 'rent'
 }
 
-function PropertyCard({ property: p, onSelect }: Props) {
+function PropertyCard({ property: p, onSelect, listingMode }: Props) {
   const status = STATUS_CONFIG[p.status] ?? STATUS_CONFIG['active']
   const isNew = p.days_on_market !== null && p.days_on_market <= 3
 
@@ -35,12 +36,28 @@ function PropertyCard({ property: p, onSelect }: Props) {
           </p>
         </div>
         <div className="text-right flex-shrink-0">
-          <p className="font-bold text-white text-base">{fmtPrice(p.price)}</p>
-          {p.price_per_sqft !== null && (
+          <p className="font-bold text-white text-base">
+            {listingMode === 'rent' ? `${fmtPrice(p.price)}/mo` : fmtPrice(p.price)}
+          </p>
+          {listingMode === 'buy' && p.price_per_sqft !== null && (
             <p className="text-xs text-slate-500">${fmtNum(p.price_per_sqft)}/ft²</p>
           )}
         </div>
       </div>
+
+      {/* Amenity tags (rent mode) */}
+      {listingMode === 'rent' && (p.amenities?.length ?? 0) > 0 && (
+        <div className="flex gap-1 mb-2 flex-wrap">
+          {(p.amenities ?? []).slice(0, 3).map(a => (
+            <span key={a} className="text-xs text-slate-500 bg-slate-800 border border-slate-700 px-1.5 py-0.5 rounded">
+              {a.toLowerCase().replace(/\b\w/g, c => c.toUpperCase())}
+            </span>
+          ))}
+          {(p.amenities?.length ?? 0) > 3 && (
+            <span className="text-xs text-slate-600">+{p.amenities!.length - 3}</span>
+          )}
+        </div>
+      )}
 
       {/* Stats row */}
       <div className="flex items-center gap-3 text-xs text-slate-400 flex-wrap">
@@ -53,7 +70,7 @@ function PropertyCard({ property: p, onSelect }: Props) {
         {p.sqft !== null && (
           <Stat value={fmtNum(p.sqft)} label="ft²" />
         )}
-        {p.hoa_monthly !== null && p.hoa_monthly > 0 && (
+        {listingMode === 'buy' && p.hoa_monthly !== null && p.hoa_monthly > 0 && (
           <span className="text-slate-500">HOA ${fmtNum(p.hoa_monthly)}/mo</span>
         )}
         {p.year_built !== null && (

@@ -5,9 +5,10 @@ interface Props {
   filtered: Property[]
   total: number
   meta: ListingsMeta | null
+  listingMode: 'buy' | 'rent'
 }
 
-export default function StatsBar({ filtered, total, meta }: Props) {
+export default function StatsBar({ filtered, total, meta, listingMode }: Props) {
   const prices = filtered.map(p => p.price).filter((p): p is number => p !== null)
   const ppsf = filtered.map(p => p.price_per_sqft).filter((p): p is number => p !== null)
 
@@ -34,11 +35,14 @@ export default function StatsBar({ filtered, total, meta }: Props) {
       {prices.length > 0 && (
         <>
           <Divider />
-          <Stat label="Range" value={`${fmtPrice(minPrice === Infinity ? null : minPrice)} – ${fmtPrice(maxPrice === -Infinity ? null : maxPrice)}`} />
+          <Stat
+            label={listingMode === 'rent' ? 'Rent range' : 'Range'}
+            value={`${fmtPrice(minPrice === Infinity ? null : minPrice)} – ${fmtPrice(maxPrice === -Infinity ? null : maxPrice)}`}
+          />
         </>
       )}
 
-      {avgPpsf !== null && (
+      {avgPpsf !== null && listingMode === 'buy' && (
         <>
           <Divider />
           <Stat label="Avg $/ft²" value={`$${fmtNum(avgPpsf)}`} />
