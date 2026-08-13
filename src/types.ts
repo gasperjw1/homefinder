@@ -141,13 +141,20 @@ export const STATUSES = [
 export function applyFilters(listings: Property[], filters: SearchCriteria): Property[] {
   let result = listings.filter(p => {
     if (filters.query) {
-      const q = filters.query.toLowerCase()
-      const match =
-        p.address.toLowerCase().includes(q) ||
-        p.city.toLowerCase().includes(q) ||
-        p.zip_code.includes(q) ||
-        p.state.toLowerCase().includes(q)
-      if (!match) return false
+      const q = filters.query.toLowerCase().trim()
+      // If the query is just a selected county name (e.g. "Queens"), skip — the county
+      // picker already loaded that data and borough names don't appear in listing cities.
+      const isRedundantCountyName = filters.counties.some(
+        c => c.toLowerCase() === q || countyLabel(c).toLowerCase() === q
+      )
+      if (!isRedundantCountyName) {
+        const match =
+          p.address.toLowerCase().includes(q) ||
+          p.city.toLowerCase().includes(q) ||
+          p.zip_code.includes(q) ||
+          p.state.toLowerCase().includes(q)
+        if (!match) return false
+      }
     }
 
     const isRent = p.listing_type === 'rent'
