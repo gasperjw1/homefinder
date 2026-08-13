@@ -1,8 +1,28 @@
 {
-  "last_updated": null,
+  "last_updated": "2026-08-13T00:20:45.883042+00:00",
   "total_listings": 0,
-  "by_county": {},
+  "by_county": {
+    "New York County, NY": 0,
+    "Kings County, NY": 0,
+    "Queens County, NY": 0,
+    "Bronx County, NY": 0,
+    "Richmond County, NY": 0,
+    "Westchester County, NY": 0,
+    "Nassau County, NY": 0,
+    "Suffolk County, NY": 0,
+    "Rockland County, NY": 0,
+    "Bergen County, NJ": 0,
+    "Hudson County, NJ": 0,
+    "Essex County, NJ": 0,
+    "Passaic County, NJ": 0,
+    "Union County, NJ": 0,
+    "Middlesex County, NJ": 0,
+    "Morris County, NJ": 0,
+    "Monmouth County, NJ": 0,
+    "Fairfield County, CT": 0,
+    "New Haven County, CT": 0
+  },
   "by_status": {},
-  "scrape_duration_seconds": 0,
+  "scrape_duration_seconds": 42.9,
   "errors": []
 }
