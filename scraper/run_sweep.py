@@ -32,7 +32,6 @@ except ImportError:
 
 REDFIN_BASE = "https://www.redfin.com"
 REDFIN_GIS = f"{REDFIN_BASE}/stingray/api/gis"
-REDFIN_AUTOCOMPLETE = f"{REDFIN_BASE}/stingray/do/location-autocomplete"
 PAGE_SIZE = 350
 REQUEST_DELAY = 2.0
 JSON_PREFIX = "{}&&"
@@ -51,29 +50,30 @@ META_PATH = os.path.join(OUTPUT_DIR, "meta.json")
 # if a region ID ever resolves to the wrong area.
 TRI_STATE_STATES = {"NY", "NJ", "CT"}
 
-# County search terms and fallback region IDs.
-# Region IDs are resolved fresh via autocomplete at scrape time;
-# these fallbacks are only used if autocomplete fails.
+# County region IDs verified via Redfin autocomplete API (Aug 2026).
+# If IDs break in the future, look them up at:
+#   https://www.redfin.com/stingray/do/location-autocomplete?location=Kings+County+NY&v=2
+# and read the type=5 row's id field.
 TRI_STATE_COUNTIES = {
-    "manhattan":     {"name": "New York County, NY",    "region_id": 1839, "region_type": 5},
-    "brooklyn":      {"name": "Kings County, NY",       "region_id": 1713, "region_type": 5},
-    "queens":        {"name": "Queens County, NY",      "region_id": 1900, "region_type": 5},
-    "bronx":         {"name": "Bronx County, NY",       "region_id": 1587, "region_type": 5},
-    "staten_island": {"name": "Richmond County, NY",    "region_id": 1906, "region_type": 5},
-    "westchester":   {"name": "Westchester County, NY", "region_id": 2068, "region_type": 5},
-    "nassau":        {"name": "Nassau County, NY",      "region_id": 1840, "region_type": 5},
-    "suffolk":       {"name": "Suffolk County, NY",     "region_id": 1986, "region_type": 5},
-    "rockland":      {"name": "Rockland County, NY",    "region_id": 1919, "region_type": 5},
-    "bergen":        {"name": "Bergen County, NJ",      "region_id": 1561, "region_type": 5},
-    "hudson":        {"name": "Hudson County, NJ",      "region_id": 1682, "region_type": 5},
-    "essex":         {"name": "Essex County, NJ",       "region_id": 1625, "region_type": 5},
-    "passaic":       {"name": "Passaic County, NJ",     "region_id": 1879, "region_type": 5},
-    "union":         {"name": "Union County, NJ",       "region_id": 2038, "region_type": 5},
-    "middlesex":     {"name": "Middlesex County, NJ",   "region_id": 1806, "region_type": 5},
-    "morris":        {"name": "Morris County, NJ",      "region_id": 1833, "region_type": 5},
-    "monmouth":      {"name": "Monmouth County, NJ",    "region_id": 1824, "region_type": 5},
-    "fairfield":     {"name": "Fairfield County, CT",   "region_id": 1630, "region_type": 5},
-    "new_haven":     {"name": "New Haven County, CT",   "region_id": 1847, "region_type": 5},
+    "manhattan":     {"name": "New York County, NY",    "region_id": 1975, "region_type": 5},
+    "brooklyn":      {"name": "Kings County, NY",       "region_id": 1968, "region_type": 5},
+    "queens":        {"name": "Queens County, NY",      "region_id": 1985, "region_type": 5},
+    "bronx":         {"name": "Bronx County, NY",       "region_id": 1947, "region_type": 5},
+    "staten_island": {"name": "Richmond County, NY",    "region_id": 1987, "region_type": 5},
+    "westchester":   {"name": "Westchester County, NY", "region_id": 2004, "region_type": 5},
+    "nassau":        {"name": "Nassau County, NY",      "region_id": 1974, "region_type": 5},
+    "suffolk":       {"name": "Suffolk County, NY",     "region_id": 1996, "region_type": 5},
+    "rockland":      {"name": "Rockland County, NY",    "region_id": 1988, "region_type": 5},
+    "bergen":        {"name": "Bergen County, NJ",      "region_id": 1892, "region_type": 5},
+    "hudson":        {"name": "Hudson County, NJ",      "region_id": 1899, "region_type": 5},
+    "essex":         {"name": "Essex County, NJ",       "region_id": 1897, "region_type": 5},
+    "passaic":       {"name": "Passaic County, NJ",     "region_id": 1906, "region_type": 5},
+    "union":         {"name": "Union County, NJ",       "region_id": 1910, "region_type": 5},
+    "middlesex":     {"name": "Middlesex County, NJ",   "region_id": 1902, "region_type": 5},
+    "morris":        {"name": "Morris County, NJ",      "region_id": 1904, "region_type": 5},
+    "monmouth":      {"name": "Monmouth County, NJ",    "region_id": 1903, "region_type": 5},
+    "fairfield":     {"name": "Fairfield County, CT",   "region_id": 425,  "region_type": 5},
+    "new_haven":     {"name": "New Haven County, CT",   "region_id": 429,  "region_type": 5},
 }
 
 PROP_TYPE_MAP = {
@@ -153,49 +153,11 @@ class RedfinClient:
             "Accept-Language": "en-US,en;q=0.9",
         })
 
-    def resolve_region(self, county_name: str, fallback_id: int, fallback_type: int) -> dict:
-        """Call autocomplete to get the current region_id for a county name.
-
-        Falls back to the hard-coded ID if autocomplete fails or returns no
-        county-level (type=5) result.
-        """
-        try:
-            time.sleep(REQUEST_DELAY)
-            resp = self._session.get(
-                REDFIN_AUTOCOMPLETE,
-                params={"location": county_name, "v": 2},
-                timeout=30,
-            )
-            resp.raise_for_status()
-            text = resp.text
-            if text.startswith(JSON_PREFIX):
-                text = text[len(JSON_PREFIX):]
-            data = json.loads(text)
-
-            for section in data.get("payload", {}).get("sections", []):
-                for row in section.get("rows", []):
-                    if row.get("type") == "5":  # county
-                        resolved_id = int(row["id"])
-                        if resolved_id != fallback_id:
-                            print(f"    Region ID updated: {fallback_id} → {resolved_id}")
-                        return {"region_id": resolved_id, "region_type": 5}
-        except Exception as e:
-            print(f"    Autocomplete failed ({county_name}): {e} — using fallback id={fallback_id}")
-
-        return {"region_id": fallback_id, "region_type": fallback_type}
-
     def search_county(self, county_key: str, county_info: dict) -> list[Property]:
         display_name = county_info["name"]
-        print(f"\n  [{county_key}] {display_name}")
-
-        # Resolve the current region ID via autocomplete
-        region = self.resolve_region(
-            display_name,
-            county_info["region_id"],
-            county_info["region_type"],
-        )
-        region_id = region["region_id"]
-        region_type = region["region_type"]
+        region_id = county_info["region_id"]
+        region_type = county_info["region_type"]
+        print(f"\n  [{county_key}] {display_name} (region_id={region_id})")
 
         all_props: list[Property] = []
         page = 1
