@@ -191,16 +191,18 @@ class RedfinClient:
             if not homes:
                 break
 
+            parsed = 0
             for home in homes:
                 prop = _parse_home(home, scraped_at)
                 if prop is not None:
                     all_props.append(prop)
+                    parsed += 1
 
-            total = payload.get("totalResultCount", 0)
             fetched = start + len(homes)
-            print(f"    Page {page}: {len(homes)} listings ({fetched}/{total})")
+            print(f"    Page {page}: {len(homes)} returned, {parsed} parsed (total so far: {len(all_props)})")
 
-            if fetched >= total:
+            # Paginate until the page is not full (no totalResultCount in new API)
+            if len(homes) < PAGE_SIZE:
                 break
 
             page += 1
@@ -211,57 +213,58 @@ class RedfinClient:
 
 
 def _parse_home(home: dict, scraped_at: str) -> Optional[Property]:
-    hd = home.get("homeData", {})
-    if not hd:
-        return None
+    # New flat API format (2026+): no homeData wrapper
+    address = (home.get("streetLine") or {}).get("value", "").strip()
+    zip_code = (home.get("postalCode") or {}).get("value", "") or home.get("zip", "")
+    zip_code = str(zip_code).strip()
 
-    addr = hd.get("addressInfo", {})
-    address = addr.get("formattedStreetLine", "").strip()
-    zip_code = addr.get("zip", "").strip()
     if not address or not zip_code:
         return None
 
-    centroid = addr.get("centroid", {}).get("centroid", {})
-    url_path = hd.get("url", "")
+    lat_lon = (home.get("latLong") or {}).get("value", {})
+    url_path = home.get("url", "")
 
-    status_raw = (hd.get("listingMetadata", {}).get("mlsStatusText") or "active").lower()
+    status_raw = (home.get("mlsStatus") or "active").lower()
     status = "active"
     for keyword, canonical in STATUS_KEYWORDS.items():
         if keyword in status_raw:
             status = canonical
             break
 
-    prop_type_code = _safe_int(hd.get("propertyType"))
+    prop_type_code = _safe_int(home.get("propertyType"))
     prop_type = PROP_TYPE_MAP.get(prop_type_code, "other")
 
-    mls_raw = hd.get("mlsId", {})
+    mls_raw = home.get("mlsId", {})
     mls_id = str(mls_raw.get("value", "")).strip() or None if isinstance(mls_raw, dict) else None
+
+    hoa_raw = home.get("hoa", {})
+    hoa = _safe_int(hoa_raw.get("value")) if isinstance(hoa_raw, dict) else None
 
     return Property(
         source="redfin",
-        source_id=str(hd.get("propertyId", "")),
+        source_id=str(home.get("propertyId", "")),
         address=address,
-        city=addr.get("city", ""),
-        state=addr.get("state", ""),
+        city=home.get("city", ""),
+        state=home.get("state", ""),
         zip_code=zip_code,
-        price=_safe_int(hd.get("priceInfo", {}).get("amount")),
-        beds=_safe_int(hd.get("bedInfo", {}).get("value")),
-        baths=_safe_float(hd.get("bathInfo", {}).get("value")),
-        sqft=_safe_int(hd.get("sqftInfo", {}).get("value")),
+        price=_safe_int((home.get("price") or {}).get("value")),
+        beds=_safe_int(home.get("beds")),
+        baths=_safe_float(home.get("baths")),
+        sqft=_safe_int((home.get("sqFt") or {}).get("value")),
         property_type=prop_type,
         status=status,
-        year_built=_safe_int(hd.get("yearBuilt", {}).get("yearBuilt")),
-        hoa_monthly=_safe_int(hd.get("hoaDuesInfo", {}).get("amount")),
-        days_on_market=_safe_int(hd.get("daysOnMarket", {}).get("daysOnMarket")),
-        lot_sqft=_safe_int(hd.get("lotSize", {}).get("value")),
-        latitude=_safe_float(centroid.get("latitude")),
-        longitude=_safe_float(centroid.get("longitude")),
+        year_built=_safe_int((home.get("yearBuilt") or {}).get("value")),
+        hoa_monthly=hoa,
+        days_on_market=_safe_int((home.get("dom") or {}).get("value")),
+        lot_sqft=_safe_int((home.get("lotSize") or {}).get("value")),
+        latitude=_safe_float(lat_lon.get("latitude")),
+        longitude=_safe_float(lat_lon.get("longitude")),
         url=f"{REDFIN_BASE}{url_path}" if url_path else "",
         mls_id=mls_id,
         walk_score=None,
         transit_score=None,
         bike_score=None,
-        description=None,
+        description=home.get("listingRemarks"),
         scraped_at=scraped_at,
     )
 
