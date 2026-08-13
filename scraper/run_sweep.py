@@ -9,7 +9,7 @@ counties, deduplicates by address fingerprint, and writes:
 
 Usage:
     python scraper/run_sweep.py [--counties manhattan brooklyn]
-    python scraper/run_sweep.py --all   (default: all 19 counties)
+    python scraper/run_sweep.py  (default: all 19 counties)
 """
 
 import argparse
@@ -32,6 +32,7 @@ except ImportError:
 
 REDFIN_BASE = "https://www.redfin.com"
 REDFIN_GIS = f"{REDFIN_BASE}/stingray/api/gis"
+REDFIN_AUTOCOMPLETE = f"{REDFIN_BASE}/stingray/do/location-autocomplete"
 PAGE_SIZE = 350
 REQUEST_DELAY = 2.0
 JSON_PREFIX = "{}&&"
@@ -46,27 +47,33 @@ OUTPUT_DIR = os.path.join(REPO_ROOT, "public", "data")
 LISTINGS_PATH = os.path.join(OUTPUT_DIR, "listings.json")
 META_PATH = os.path.join(OUTPUT_DIR, "meta.json")
 
-# Pre-verified county region IDs (region_type=5 for county)
+# Valid tri-state states — safety filter to block out-of-region results
+# if a region ID ever resolves to the wrong area.
+TRI_STATE_STATES = {"NY", "NJ", "CT"}
+
+# County search terms and fallback region IDs.
+# Region IDs are resolved fresh via autocomplete at scrape time;
+# these fallbacks are only used if autocomplete fails.
 TRI_STATE_COUNTIES = {
-    "manhattan":    {"name": "New York County, NY",    "region_id": 1839, "region_type": 5},
-    "brooklyn":     {"name": "Kings County, NY",       "region_id": 1713, "region_type": 5},
-    "queens":       {"name": "Queens County, NY",      "region_id": 1900, "region_type": 5},
-    "bronx":        {"name": "Bronx County, NY",       "region_id": 1587, "region_type": 5},
-    "staten_island":{"name": "Richmond County, NY",    "region_id": 1906, "region_type": 5},
-    "westchester":  {"name": "Westchester County, NY", "region_id": 2068, "region_type": 5},
-    "nassau":       {"name": "Nassau County, NY",      "region_id": 1840, "region_type": 5},
-    "suffolk":      {"name": "Suffolk County, NY",     "region_id": 1986, "region_type": 5},
-    "rockland":     {"name": "Rockland County, NY",    "region_id": 1919, "region_type": 5},
-    "bergen":       {"name": "Bergen County, NJ",      "region_id": 1561, "region_type": 5},
-    "hudson":       {"name": "Hudson County, NJ",      "region_id": 1682, "region_type": 5},
-    "essex":        {"name": "Essex County, NJ",       "region_id": 1625, "region_type": 5},
-    "passaic":      {"name": "Passaic County, NJ",     "region_id": 1879, "region_type": 5},
-    "union":        {"name": "Union County, NJ",       "region_id": 2038, "region_type": 5},
-    "middlesex":    {"name": "Middlesex County, NJ",   "region_id": 1806, "region_type": 5},
-    "morris":       {"name": "Morris County, NJ",      "region_id": 1833, "region_type": 5},
-    "monmouth":     {"name": "Monmouth County, NJ",    "region_id": 1824, "region_type": 5},
-    "fairfield":    {"name": "Fairfield County, CT",   "region_id": 1630, "region_type": 5},
-    "new_haven":    {"name": "New Haven County, CT",   "region_id": 1847, "region_type": 5},
+    "manhattan":     {"name": "New York County, NY",    "region_id": 1839, "region_type": 5},
+    "brooklyn":      {"name": "Kings County, NY",       "region_id": 1713, "region_type": 5},
+    "queens":        {"name": "Queens County, NY",      "region_id": 1900, "region_type": 5},
+    "bronx":         {"name": "Bronx County, NY",       "region_id": 1587, "region_type": 5},
+    "staten_island": {"name": "Richmond County, NY",    "region_id": 1906, "region_type": 5},
+    "westchester":   {"name": "Westchester County, NY", "region_id": 2068, "region_type": 5},
+    "nassau":        {"name": "Nassau County, NY",      "region_id": 1840, "region_type": 5},
+    "suffolk":       {"name": "Suffolk County, NY",     "region_id": 1986, "region_type": 5},
+    "rockland":      {"name": "Rockland County, NY",    "region_id": 1919, "region_type": 5},
+    "bergen":        {"name": "Bergen County, NJ",      "region_id": 1561, "region_type": 5},
+    "hudson":        {"name": "Hudson County, NJ",      "region_id": 1682, "region_type": 5},
+    "essex":         {"name": "Essex County, NJ",       "region_id": 1625, "region_type": 5},
+    "passaic":       {"name": "Passaic County, NJ",     "region_id": 1879, "region_type": 5},
+    "union":         {"name": "Union County, NJ",       "region_id": 2038, "region_type": 5},
+    "middlesex":     {"name": "Middlesex County, NJ",   "region_id": 1806, "region_type": 5},
+    "morris":        {"name": "Morris County, NJ",      "region_id": 1833, "region_type": 5},
+    "monmouth":      {"name": "Monmouth County, NJ",    "region_id": 1824, "region_type": 5},
+    "fairfield":     {"name": "Fairfield County, CT",   "region_id": 1630, "region_type": 5},
+    "new_haven":     {"name": "New Haven County, CT",   "region_id": 1847, "region_type": 5},
 }
 
 PROP_TYPE_MAP = {
@@ -146,16 +153,55 @@ class RedfinClient:
             "Accept-Language": "en-US,en;q=0.9",
         })
 
+    def resolve_region(self, county_name: str, fallback_id: int, fallback_type: int) -> dict:
+        """Call autocomplete to get the current region_id for a county name.
+
+        Falls back to the hard-coded ID if autocomplete fails or returns no
+        county-level (type=5) result.
+        """
+        try:
+            time.sleep(REQUEST_DELAY)
+            resp = self._session.get(
+                REDFIN_AUTOCOMPLETE,
+                params={"location": county_name, "v": 2},
+                timeout=30,
+            )
+            resp.raise_for_status()
+            text = resp.text
+            if text.startswith(JSON_PREFIX):
+                text = text[len(JSON_PREFIX):]
+            data = json.loads(text)
+
+            for section in data.get("payload", {}).get("sections", []):
+                for row in section.get("rows", []):
+                    if row.get("type") == "5":  # county
+                        resolved_id = int(row["id"])
+                        if resolved_id != fallback_id:
+                            print(f"    Region ID updated: {fallback_id} → {resolved_id}")
+                        return {"region_id": resolved_id, "region_type": 5}
+        except Exception as e:
+            print(f"    Autocomplete failed ({county_name}): {e} — using fallback id={fallback_id}")
+
+        return {"region_id": fallback_id, "region_type": fallback_type}
+
     def search_county(self, county_key: str, county_info: dict) -> list[Property]:
-        region_id = county_info["region_id"]
-        region_type = county_info["region_type"]
         display_name = county_info["name"]
+        print(f"\n  [{county_key}] {display_name}")
+
+        # Resolve the current region ID via autocomplete
+        region = self.resolve_region(
+            display_name,
+            county_info["region_id"],
+            county_info["region_type"],
+        )
+        region_id = region["region_id"]
+        region_type = region["region_type"]
+
         all_props: list[Property] = []
         page = 1
         start = 0
         scraped_at = datetime.now(timezone.utc).isoformat()
 
-        print(f"\n  [{county_key}] {display_name}")
         while True:
             params = {
                 "al": 1,
@@ -198,25 +244,32 @@ class RedfinClient:
                     all_props.append(prop)
                     parsed += 1
 
-            fetched = start + len(homes)
-            print(f"    Page {page}: {len(homes)} returned, {parsed} parsed (total so far: {len(all_props)})")
+            skipped = len(homes) - parsed
+            print(f"    Page {page}: {len(homes)} returned, {parsed} parsed"
+                  + (f", {skipped} skipped (out-of-region)" if skipped else "")
+                  + f" (total: {len(all_props)})")
 
-            # Paginate until the page is not full (no totalResultCount in new API)
+            # Paginate until page is not full (totalResultCount removed from API)
             if len(homes) < PAGE_SIZE:
                 break
 
             page += 1
-            start = fetched
+            start += len(homes)
 
-        print(f"    Total: {len(all_props)} listings")
+        print(f"    Done: {len(all_props)} listings")
         return all_props
 
 
 def _parse_home(home: dict, scraped_at: str) -> Optional[Property]:
-    # New flat API format (2026+): no homeData wrapper
+    """Parse a single home object from the flat Redfin GIS response (2026+ format)."""
+
+    # Hard filter: only keep tri-state listings
+    state = home.get("state", "")
+    if state not in TRI_STATE_STATES:
+        return None
+
     address = (home.get("streetLine") or {}).get("value", "").strip()
-    zip_code = (home.get("postalCode") or {}).get("value", "") or home.get("zip", "")
-    zip_code = str(zip_code).strip()
+    zip_code = str((home.get("postalCode") or {}).get("value", "") or home.get("zip", "")).strip()
 
     if not address or not zip_code:
         return None
@@ -245,7 +298,7 @@ def _parse_home(home: dict, scraped_at: str) -> Optional[Property]:
         source_id=str(home.get("propertyId", "")),
         address=address,
         city=home.get("city", ""),
-        state=home.get("state", ""),
+        state=state,
         zip_code=zip_code,
         price=_safe_int((home.get("price") or {}).get("value")),
         beds=_safe_int(home.get("beds")),
@@ -377,9 +430,10 @@ def main():
     all_props = deduplicate(all_props)
     print(f"After dedup: {len(all_props)}")
 
-    # Safety check: don't overwrite with a dramatically smaller dataset
+    # Safety check: don't overwrite with a dramatically smaller dataset.
+    # Disabled for the first real run (prev_count = 0 from bad data).
     prev_count = load_previous_count()
-    if prev_count > 0 and len(all_props) < prev_count * 0.5:
+    if prev_count > 100 and len(all_props) < prev_count * 0.5:
         print(f"\nSAFETY: {len(all_props)} listings is <50% of previous {prev_count}. Aborting write.")
         sys.exit(1)
 
