@@ -47,6 +47,7 @@ REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUTPUT_DIR = os.path.join(REPO_ROOT, "public", "data")
 LISTINGS_PATH = os.path.join(OUTPUT_DIR, "listings.json")
 META_PATH = os.path.join(OUTPUT_DIR, "meta.json")
+COUNTIES_DIR = os.path.join(OUTPUT_DIR, "counties")
 
 # Valid tri-state states — safety filter to block out-of-region results
 # if a region ID ever resolves to the wrong area.
@@ -350,6 +351,14 @@ def write_listings(listings: list[Property], meta: dict) -> None:
     print(f"\n  Written: {LISTINGS_PATH} ({os.path.getsize(LISTINGS_PATH) / 1024:.1f} KB)")
 
 
+def write_county_file(county_key: str, listings: list[Property], _last_updated: str) -> None:
+    os.makedirs(COUNTIES_DIR, exist_ok=True)
+    path = os.path.join(COUNTIES_DIR, f"{county_key}.json")
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump([p.to_dict() for p in listings], f, separators=(",", ":"))
+    print(f"    Written: {path} ({os.path.getsize(path) / 1024:.1f} KB, {len(listings)} listings)")
+
+
 def write_meta(meta: dict) -> None:
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     with open(META_PATH, "w", encoding="utf-8") as f:
@@ -381,18 +390,21 @@ def main():
     client = RedfinClient()
     start_time = time.monotonic()
     all_props: list[Property] = []
+    props_by_county: dict[str, list[Property]] = {}
     by_county: dict[str, int] = {}
     errors: list[dict] = []
 
     for county_key, county_info in counties.items():
         try:
             props = client.search_county(county_key, county_info)
+            props_by_county[county_key] = props
             by_county[county_info["name"]] = len(props)
             all_props.extend(props)
         except Exception as e:
             msg = f"{county_info['name']}: {e}"
             print(f"  ERROR: {msg}")
             errors.append({"county": county_info["name"], "error": str(e)})
+            props_by_county[county_key] = []
             by_county[county_info["name"]] = 0
 
     print(f"\nTotal raw listings: {len(all_props)}")
@@ -413,10 +425,21 @@ def main():
     for p in all_props:
         by_status[p.status] = by_status.get(p.status, 0) + 1
 
+    # Structured county metadata for the frontend county picker
+    counties_meta: dict[str, dict] = {}
+    for county_key, county_info in TRI_STATE_COUNTIES.items():
+        state_code = county_info["name"].rsplit(", ", 1)[-1]
+        counties_meta[county_key] = {
+            "name": county_info["name"],
+            "state": state_code,
+            "count": len(props_by_county.get(county_key, [])),
+        }
+
     meta = {
         "last_updated": last_updated,
         "total_listings": len(all_props),
         "by_county": by_county,
+        "counties": counties_meta,
         "by_status": by_status,
         "scrape_duration_seconds": round(duration, 1),
         "errors": errors,
@@ -424,6 +447,10 @@ def main():
 
     write_listings(all_props, meta)
     write_meta(meta)
+
+    print(f"\nWriting per-county files...")
+    for county_key, props in props_by_county.items():
+        write_county_file(county_key, props, last_updated)
 
     print(f"\nDone in {duration:.1f}s")
     if errors:

@@ -28,10 +28,17 @@ export interface Property {
   scraped_at: string
 }
 
+export interface CountyInfo {
+  name: string
+  state: string
+  count: number
+}
+
 export interface ListingsMeta {
   last_updated: string | null
   total_listings: number
   source: string
+  counties?: Record<string, CountyInfo>
 }
 
 export interface ListingsData {
@@ -40,6 +47,7 @@ export interface ListingsData {
 }
 
 export interface SearchCriteria {
+  counties: string[]
   query: string
   minPrice: number | null
   maxPrice: number | null
@@ -55,6 +63,7 @@ export interface SearchCriteria {
 }
 
 export const DEFAULT_FILTERS: SearchCriteria = {
+  counties: [],
   query: '',
   minPrice: null,
   maxPrice: null,
@@ -67,6 +76,25 @@ export const DEFAULT_FILTERS: SearchCriteria = {
   maxHoa: null,
   maxDom: null,
   sortBy: 'price_asc',
+}
+
+export const COUNTY_GROUPS: Array<{ label: string; abbr: string; keys: string[] }> = [
+  {
+    label: 'New York', abbr: 'NY',
+    keys: ['manhattan', 'brooklyn', 'queens', 'bronx', 'staten_island', 'westchester', 'nassau', 'suffolk', 'rockland'],
+  },
+  {
+    label: 'New Jersey', abbr: 'NJ',
+    keys: ['bergen', 'hudson', 'essex', 'passaic', 'union', 'middlesex', 'morris', 'monmouth'],
+  },
+  {
+    label: 'Connecticut', abbr: 'CT',
+    keys: ['fairfield', 'new_haven'],
+  },
+]
+
+export function countyLabel(key: string): string {
+  return key.split('_').map(w => w[0].toUpperCase() + w.slice(1)).join(' ')
 }
 
 export const PROPERTY_TYPES = [

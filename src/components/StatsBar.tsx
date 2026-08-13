@@ -11,6 +11,9 @@ export default function StatsBar({ filtered, total, meta }: Props) {
   const prices = filtered.map(p => p.price).filter((p): p is number => p !== null)
   const ppsf = filtered.map(p => p.price_per_sqft).filter((p): p is number => p !== null)
 
+  let minPrice = Infinity, maxPrice = -Infinity
+  for (const v of prices) { if (v < minPrice) minPrice = v; if (v > maxPrice) maxPrice = v }
+
   const avgPpsf = ppsf.length > 0 ? Math.round(ppsf.reduce((a, b) => a + b, 0) / ppsf.length) : null
 
   const lastUpdated = meta?.last_updated
@@ -31,7 +34,7 @@ export default function StatsBar({ filtered, total, meta }: Props) {
       {prices.length > 0 && (
         <>
           <Divider />
-          <Stat label="Range" value={`${fmtPrice(Math.min(...prices))} – ${fmtPrice(Math.max(...prices))}`} />
+          <Stat label="Range" value={`${fmtPrice(minPrice === Infinity ? null : minPrice)} – ${fmtPrice(maxPrice === -Infinity ? null : maxPrice)}`} />
         </>
       )}
 

@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
-import type { Property, ListingsData, SearchCriteria } from './types'
-import { DEFAULT_FILTERS, applyFilters } from './types'
+import { Virtuoso } from 'react-virtuoso'
+import type { Property, ListingsMeta, SearchCriteria } from './types'
+import { DEFAULT_FILTERS, COUNTY_GROUPS, applyFilters } from './types'
 import FilterPanel from './components/FilterPanel'
 import PropertyCard from './components/PropertyCard'
 import PropertyDetail from './components/PropertyDetail'
@@ -17,35 +18,81 @@ function loadSavedFilters(): SearchCriteria {
 }
 
 export default function App() {
-  const [data, setData] = useState<ListingsData | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [meta, setMeta] = useState<ListingsMeta | null>(null)
+  const [loadingMeta, setLoadingMeta] = useState(true)
+  const [metaError, setMetaError] = useState<string | null>(null)
+
+  const [listings, setListings] = useState<Property[]>([])
+  const [loadingCounties, setLoadingCounties] = useState(false)
+  const [countyError, setCountyError] = useState<string | null>(null)
+
   const [filters, setFilters] = useState<SearchCriteria>(loadSavedFilters)
   const [selected, setSelected] = useState<Property | null>(null)
   const [filterOpen, setFilterOpen] = useState(false)
 
+  // Load meta.json once on mount — tiny file, shows county counts in sidebar
   useEffect(() => {
-    const url = `${import.meta.env.BASE_URL}data/listings.json`
-    fetch(url)
-      .then(r => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`)
-        return r.json() as Promise<ListingsData>
-      })
-      .then(setData)
-      .catch(e => setError(String(e)))
-      .finally(() => setLoading(false))
+    const base = import.meta.env.BASE_URL
+    fetch(`${base}data/meta.json`)
+      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json() })
+      .then(setMeta)
+      .catch(e => setMetaError(String(e)))
+      .finally(() => setLoadingMeta(false))
   }, [])
 
+  // Persist filters to localStorage
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(filters))
     } catch {}
   }, [filters])
 
-  const filtered = useMemo(
-    () => applyFilters(data?.listings ?? [], filters),
-    [data, filters],
+  // Stable string key so the fetch effect doesn't fire on every render
+  const countiesKey = useMemo(
+    () => [...filters.counties].sort().join(','),
+    [filters.counties],
   )
+
+  // Fetch only the selected county files in parallel when county selection changes
+  useEffect(() => {
+    if (!countiesKey) {
+      setListings([])
+      setCountyError(null)
+      return
+    }
+    const keys = countiesKey.split(',')
+    setLoadingCounties(true)
+    setCountyError(null)
+    const base = import.meta.env.BASE_URL
+    Promise.all(
+      keys.map(key =>
+        fetch(`${base}data/counties/${key}.json`)
+          .then(r => {
+            if (!r.ok) throw new Error(`HTTP ${r.status} fetching ${key}`)
+            return r.json() as Promise<Property[]>
+          }),
+      ),
+    )
+      .then(arrays => {
+        // Merge and deduplicate cross-county listings by fingerprint
+        const map = new Map<string, Property>()
+        for (const arr of arrays) {
+          for (const p of arr) {
+            if (!map.has(p.fingerprint)) map.set(p.fingerprint, p)
+          }
+        }
+        setListings(Array.from(map.values()))
+      })
+      .catch(e => setCountyError(String(e)))
+      .finally(() => setLoadingCounties(false))
+  }, [countiesKey])
+
+  const filtered = useMemo(
+    () => applyFilters(listings, filters),
+    [listings, filters],
+  )
+
+  const noCountySelected = !loadingMeta && !metaError && filters.counties.length === 0
 
   return (
     <div className="flex flex-col h-screen overflow-hidden">
@@ -79,6 +126,7 @@ export default function App() {
             filters={filters}
             onChange={setFilters}
             resultCount={filtered.length}
+            meta={meta}
           />
         </aside>
 
@@ -86,65 +134,101 @@ export default function App() {
         <main className="flex-1 flex flex-col overflow-hidden">
           <StatsBar
             filtered={filtered}
-            total={data?.listings.length ?? 0}
-            meta={data?.meta ?? null}
+            total={listings.length}
+            meta={meta}
           />
 
-          {loading && (
+          {/* Meta load error */}
+          {metaError && (
             <div className="flex-1 flex items-center justify-center">
-              <div className="text-center">
-                <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-                <p className="text-slate-400 text-sm">Loading listings...</p>
+              <div className="text-center max-w-sm px-6">
+                <p className="text-2xl mb-2">⚠️</p>
+                <p className="text-slate-300 font-medium mb-1">Couldn't load app data</p>
+                <p className="text-slate-500 text-sm">{metaError}</p>
               </div>
             </div>
           )}
 
-          {error && (
+          {/* Empty state: pick a county to start */}
+          {noCountySelected && (
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center max-w-sm px-6">
-                <p className="text-2xl mb-2">⚠️</p>
-                <p className="text-slate-300 font-medium mb-1">Couldn't load listings</p>
-                <p className="text-slate-500 text-sm">{error}</p>
-                <p className="text-slate-600 text-xs mt-3">
-                  The first scrape may not have run yet. Trigger it manually via GitHub Actions.
+                <p className="text-4xl mb-3">🗺️</p>
+                <p className="text-slate-300 font-semibold mb-2">Select a county to get started</p>
+                <p className="text-slate-500 text-sm mb-5">
+                  Choose one or more counties from the sidebar, or load an entire state below.
+                </p>
+                <div className="flex gap-2 justify-center flex-wrap">
+                  {COUNTY_GROUPS.map(g => (
+                    <button
+                      key={g.abbr}
+                      onClick={() => setFilters(f => ({ ...f, counties: g.keys }))}
+                      className="text-sm px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-colors"
+                    >
+                      All {g.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Loading county files */}
+          {loadingCounties && (
+            <div className="flex-1 flex items-center justify-center">
+              <div className="text-center">
+                <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+                <p className="text-slate-400 text-sm">
+                  Loading {filters.counties.length} county file{filters.counties.length !== 1 ? 's' : ''}…
                 </p>
               </div>
             </div>
           )}
 
-          {!loading && !error && data && filtered.length === 0 && (
+          {/* County fetch error */}
+          {countyError && !loadingCounties && (
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center max-w-sm px-6">
-                <p className="text-4xl mb-3">🏠</p>
-                {data.listings.length === 0 ? (
-                  <>
-                    <p className="text-slate-300 font-medium mb-1">No data yet</p>
-                    <p className="text-slate-500 text-sm">
-                      The scraper hasn't run yet. Trigger it in GitHub Actions → Daily Listing Scrape → Run workflow.
-                    </p>
-                  </>
-                ) : (
-                  <>
-                    <p className="text-slate-300 font-medium mb-1">No listings match your filters</p>
-                    <p className="text-slate-500 text-sm">Try broadening your search criteria.</p>
-                  </>
-                )}
+                <p className="text-2xl mb-2">⚠️</p>
+                <p className="text-slate-300 font-medium mb-1">Couldn't load listings</p>
+                <p className="text-slate-500 text-sm">{countyError}</p>
+                <p className="text-slate-600 text-xs mt-3">
+                  The scraper may not have run yet. Try again after the next GitHub Actions run.
+                </p>
               </div>
             </div>
           )}
 
-          {!loading && !error && filtered.length > 0 && (
-            <div className="flex-1 overflow-y-auto scrollbar-thin px-3 py-3 space-y-2">
-              {filtered.map(p => (
-                <PropertyCard
-                  key={p.fingerprint}
-                  property={p}
-                  onClick={() => setSelected(p)}
-                />
-              ))}
-              <p className="text-center text-slate-700 text-xs py-4">
-                — {filtered.length.toLocaleString()} listings —
-              </p>
+          {/* No filter matches */}
+          {!loadingCounties && !countyError && filters.counties.length > 0 && listings.length > 0 && filtered.length === 0 && (
+            <div className="flex-1 flex items-center justify-center">
+              <div className="text-center max-w-sm px-6">
+                <p className="text-4xl mb-3">🏠</p>
+                <p className="text-slate-300 font-medium mb-1">No listings match your filters</p>
+                <p className="text-slate-500 text-sm">Try broadening your search criteria.</p>
+              </div>
+            </div>
+          )}
+
+          {/* Results — virtual list renders only ~20 cards at a time */}
+          {!loadingCounties && !countyError && filtered.length > 0 && (
+            <div className="flex-1 min-h-0">
+              <Virtuoso
+                style={{ height: '100%' }}
+                data={filtered}
+                itemContent={(_, p) => (
+                  <div className="px-3 pt-2">
+                    <PropertyCard property={p} onSelect={setSelected} />
+                  </div>
+                )}
+                components={{
+                  Footer: () => (
+                    <p className="text-center text-slate-700 text-xs py-4">
+                      — {filtered.length.toLocaleString()} listings —
+                    </p>
+                  ),
+                }}
+              />
             </div>
           )}
         </main>
@@ -159,6 +243,7 @@ export default function App() {
               filters={filters}
               onChange={setFilters}
               resultCount={filtered.length}
+              meta={meta}
               onClose={() => setFilterOpen(false)}
             />
           </div>

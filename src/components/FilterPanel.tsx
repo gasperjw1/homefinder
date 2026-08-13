@@ -1,13 +1,14 @@
-import { type SearchCriteria, DEFAULT_FILTERS, PROPERTY_TYPES, STATUSES } from '../types'
+import { type SearchCriteria, type ListingsMeta, DEFAULT_FILTERS, PROPERTY_TYPES, STATUSES, COUNTY_GROUPS, countyLabel } from '../types'
 
 interface Props {
   filters: SearchCriteria
   onChange: (f: SearchCriteria) => void
   resultCount: number
+  meta: ListingsMeta | null
   onClose?: () => void
 }
 
-export default function FilterPanel({ filters, onChange, resultCount, onClose }: Props) {
+export default function FilterPanel({ filters, onChange, resultCount, meta, onClose }: Props) {
   const set = <K extends keyof SearchCriteria>(key: K, value: SearchCriteria[K]) =>
     onChange({ ...filters, [key]: value })
 
@@ -40,6 +41,15 @@ export default function FilterPanel({ filters, onChange, resultCount, onClose }:
 
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto scrollbar-thin px-4 py-4 space-y-6">
+
+        {/* Location */}
+        <Section label="Location">
+          <CountyPicker
+            selected={filters.counties}
+            onChange={v => set('counties', v)}
+            meta={meta}
+          />
+        </Section>
 
         {/* Search */}
         <Section label="Search">
@@ -212,6 +222,92 @@ export default function FilterPanel({ filters, onChange, resultCount, onClose }:
           </button>
         </div>
       )}
+    </div>
+  )
+}
+
+function CountyPicker({
+  selected, onChange, meta,
+}: {
+  selected: string[]
+  onChange: (counties: string[]) => void
+  meta: ListingsMeta | null
+}) {
+  const toggle = (key: string) =>
+    onChange(selected.includes(key) ? selected.filter(k => k !== key) : [...selected, key])
+
+  const toggleGroup = (keys: string[]) => {
+    const allOn = keys.every(k => selected.includes(k))
+    onChange(allOn ? selected.filter(k => !keys.includes(k)) : [...new Set([...selected, ...keys])])
+  }
+
+  return (
+    <div className="space-y-3">
+      {/* State quick-select pills */}
+      <div className="flex gap-1.5 items-center">
+        {COUNTY_GROUPS.map(g => {
+          const allOn = g.keys.every(k => selected.includes(k))
+          return (
+            <button
+              key={g.abbr}
+              onClick={() => toggleGroup(g.keys)}
+              className={`text-xs px-3 py-1 rounded-full border transition-colors ${
+                allOn
+                  ? 'bg-blue-600 border-blue-600 text-white'
+                  : 'border-slate-600 text-slate-400 hover:border-slate-400 hover:text-slate-300'
+              }`}
+            >
+              {g.abbr}
+            </button>
+          )
+        })}
+        {selected.length > 0 && (
+          <button
+            onClick={() => onChange([])}
+            className="text-xs text-slate-500 hover:text-slate-300 ml-auto"
+          >
+            Clear
+          </button>
+        )}
+      </div>
+
+      {/* Grouped checkboxes */}
+      {COUNTY_GROUPS.map(g => (
+        <div key={g.label}>
+          <p className="text-xs text-slate-600 uppercase tracking-wide font-semibold mb-1">{g.label}</p>
+          <div className="space-y-0.5">
+            {g.keys.map(key => {
+              const count = meta?.counties?.[key]?.count ?? 0
+              const checked = selected.includes(key)
+              return (
+                <div
+                  key={key}
+                  className="flex items-center justify-between gap-2 cursor-pointer group py-0.5"
+                  onClick={() => toggle(key)}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <span
+                      className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 transition-colors ${
+                        checked ? 'bg-blue-600 border-blue-600' : 'border-slate-600 group-hover:border-slate-400'
+                      }`}
+                    >
+                      {checked && (
+                        <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 10 10">
+                          <path d="M1.5 5l2.5 2.5 4.5-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      )}
+                    </span>
+                    <span className="text-sm text-slate-300 group-hover:text-white">{countyLabel(key)}</span>
+                  </div>
+                  {count > 0 && (
+                    <span className="text-xs text-slate-600">{count.toLocaleString()}</span>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      ))}
     </div>
   )
 }
