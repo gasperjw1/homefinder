@@ -192,9 +192,7 @@ export function applyFilters(listings: Property[], filters: SearchCriteria): Pro
 
 export function fmtPrice(n: number | null): string {
   if (n === null) return '—'
-  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(n % 1_000_000 === 0 ? 0 : 2)}M`
-  if (n >= 1_000) return `$${(n / 1_000).toFixed(0)}K`
-  return `$${n}`
+  return `$${n.toLocaleString()}`
 }
 
 export function fmtNum(n: number | null): string {
