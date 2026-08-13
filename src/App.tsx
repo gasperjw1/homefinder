@@ -33,15 +33,18 @@ export default function App() {
   const [selected, setSelected] = useState<Property | null>(null)
   const [filterOpen, setFilterOpen] = useState(false)
 
-  // Load meta.json once on mount — tiny file, shows county counts in sidebar
+  // Load meta file when mode changes — meta.json for buy, rentals_meta.json for rent
   useEffect(() => {
     const base = import.meta.env.BASE_URL
-    fetch(`${base}data/meta.json`)
+    const metaFile = listingMode === 'rent' ? 'data/rentals_meta.json' : 'data/meta.json'
+    setLoadingMeta(true)
+    setMetaError(null)
+    fetch(`${base}${metaFile}`)
       .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json() })
       .then(setMeta)
       .catch(e => setMetaError(String(e)))
       .finally(() => setLoadingMeta(false))
-  }, [])
+  }, [listingMode])
 
   // Persist filters to localStorage
   useEffect(() => {

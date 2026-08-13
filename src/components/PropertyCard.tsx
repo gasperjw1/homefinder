@@ -30,17 +30,31 @@ function PropertyCard({ property: p, onSelect, listingMode }: Props) {
               </span>
             )}
           </div>
-          <p className="font-medium text-white text-sm truncate">{p.address}</p>
+          {listingMode === 'rent' && p.property_name && (
+            <p className="font-medium text-white text-sm truncate">{p.property_name}</p>
+          )}
+          <p className={`${listingMode === 'rent' && p.property_name ? 'text-slate-400 text-xs' : 'font-medium text-white text-sm'} truncate`}>{p.address}</p>
           <p className="text-slate-400 text-xs mt-0.5">
             {TYPE_LABELS[p.property_type] ?? p.property_type} · {p.city}, {p.state} {p.zip_code}
           </p>
         </div>
         <div className="text-right flex-shrink-0">
-          <p className="font-bold text-white text-base">
-            {listingMode === 'rent' ? `${fmtPrice(p.price)}/mo` : fmtPrice(p.price)}
-          </p>
-          {listingMode === 'buy' && p.price_per_sqft !== null && (
-            <p className="text-xs text-slate-500">${fmtNum(p.price_per_sqft)}/ft²</p>
+          {listingMode === 'rent' ? (
+            <>
+              <p className="font-bold text-white text-base">
+                {fmtPrice(p.price)}{p.price_max && p.price_max !== p.price ? `–${fmtPrice(p.price_max)}` : ''}/mo
+              </p>
+              {p.num_available_units != null && p.num_available_units > 0 && (
+                <p className="text-xs text-slate-500">{p.num_available_units} unit{p.num_available_units !== 1 ? 's' : ''} avail</p>
+              )}
+            </>
+          ) : (
+            <>
+              <p className="font-bold text-white text-base">{fmtPrice(p.price)}</p>
+              {p.price_per_sqft !== null && (
+                <p className="text-xs text-slate-500">${fmtNum(p.price_per_sqft)}/ft²</p>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -62,7 +76,7 @@ function PropertyCard({ property: p, onSelect, listingMode }: Props) {
       {/* Stats row */}
       <div className="flex items-center gap-3 text-xs text-slate-400 flex-wrap">
         {p.beds !== null && (
-          <Stat value={`${p.beds}`} label="bd" />
+          <Stat value={listingMode === 'rent' && p.beds_max != null && p.beds_max !== p.beds ? `${p.beds}–${p.beds_max}` : `${p.beds}`} label="bd" />
         )}
         {p.baths !== null && (
           <Stat value={`${p.baths}`} label="ba" />

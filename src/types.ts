@@ -1,13 +1,16 @@
 export interface Property {
   source: string
   source_id: string
+  listing_type?: 'for_sale' | 'rent'
   fingerprint: string
   address: string
   city: string
   state: string
   zip_code: string
   price: number | null
+  price_max?: number | null
   beds: number | null
+  beds_max?: number | null
   baths: number | null
   sqft: number | null
   property_type: string
@@ -25,6 +28,8 @@ export interface Property {
   bike_score: number | null
   description: string | null
   amenities: string[]
+  num_available_units?: number | null
+  property_name?: string | null
   price_per_sqft: number | null
   scraped_at: string
 }

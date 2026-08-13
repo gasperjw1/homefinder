@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
   workflow_run:
-    workflows: ["Daily Listing Scrape"]
+    workflows: ["Daily Listing Scrape", "Daily Rental Scrape"]
     types: [completed]
   workflow_dispatch:
 

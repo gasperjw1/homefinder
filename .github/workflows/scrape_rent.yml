@@ -1,0 +1,33 @@
+name: Daily Rental Scrape
+
+on:
+  schedule:
+    - cron: '30 10 * * *'  # 6:30 AM ET daily (30 min after for-sale)
+  workflow_dispatch:        # Allow manual trigger
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run rental scraper
+        run: python scraper/run_rentals.py
+
+      - name: Commit rental data
+        run: |
+          git config user.name "HomeFinder Bot"
+          git config user.email "bot@homefinder.local"
+          git add public/data/rentals/ public/data/rentals_meta.json
+          git diff --staged --quiet || git commit -m "data: daily rental update $(date -u +%Y-%m-%d)"
+          git push
