@@ -218,12 +218,30 @@ export default function App() {
           {countyError && !loadingCounties && (
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center max-w-sm px-6">
-                <p className="text-2xl mb-2">⚠️</p>
-                <p className="text-slate-300 font-medium mb-1">Couldn't load listings</p>
-                <p className="text-slate-500 text-sm">{countyError}</p>
-                <p className="text-slate-600 text-xs mt-3">
-                  The scraper may not have run yet. Try again after the next GitHub Actions run.
-                </p>
+                {listingMode === 'rent' ? (
+                  <>
+                    <p className="text-4xl mb-3">🏗️</p>
+                    <p className="text-slate-300 font-semibold mb-2">Rental listings coming soon</p>
+                    <p className="text-slate-500 text-sm">
+                      We're building the rental data pipeline. Check back soon — for-sale listings are available now.
+                    </p>
+                    <button
+                      onClick={() => setListingMode('buy')}
+                      className="mt-5 text-sm px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-colors"
+                    >
+                      Browse for-sale listings
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-2xl mb-2">⚠️</p>
+                    <p className="text-slate-300 font-medium mb-1">Couldn't load listings</p>
+                    <p className="text-slate-500 text-sm">{countyError}</p>
+                    <p className="text-slate-600 text-xs mt-3">
+                      The scraper may not have run yet. Try again after the next GitHub Actions run.
+                    </p>
+                  </>
+                )}
               </div>
             </div>
           )}
