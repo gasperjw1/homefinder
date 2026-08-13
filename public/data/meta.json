@@ -1,26 +1,26 @@
 {
-  "last_updated": "2026-08-13T09:29:22.427171+00:00",
-  "total_listings": 36510,
+  "last_updated": "2026-08-13T11:06:36.719243+00:00",
+  "total_listings": 36516,
   "by_county": {
     "New York County, NY": 272,
     "Kings County, NY": 4090,
     "Queens County, NY": 5401,
     "Bronx County, NY": 1414,
     "Richmond County, NY": 1183,
-    "Westchester County, NY": 1909,
+    "Westchester County, NY": 1911,
     "Nassau County, NY": 2841,
     "Suffolk County, NY": 3726,
     "Rockland County, NY": 832,
-    "Bergen County, NJ": 1841,
-    "Hudson County, NJ": 1801,
+    "Bergen County, NJ": 1840,
+    "Hudson County, NJ": 1800,
     "Essex County, NJ": 1379,
-    "Passaic County, NJ": 874,
+    "Passaic County, NJ": 875,
     "Union County, NJ": 882,
     "Middlesex County, NJ": 1769,
-    "Morris County, NJ": 996,
-    "Monmouth County, NJ": 1938,
+    "Morris County, NJ": 997,
+    "Monmouth County, NJ": 1941,
     "Fairfield County, CT": 1808,
-    "New Haven County, CT": 1623
+    "New Haven County, CT": 1624
   },
   "counties": {
     "manhattan": {
@@ -51,7 +51,7 @@
     "westchester": {
       "name": "Westchester County, NY",
       "state": "NY",
-      "count": 1909
+      "count": 1911
     },
     "nassau": {
       "name": "Nassau County, NY",
@@ -71,12 +71,12 @@
     "bergen": {
       "name": "Bergen County, NJ",
       "state": "NJ",
-      "count": 1841
+      "count": 1840
     },
     "hudson": {
       "name": "Hudson County, NJ",
       "state": "NJ",
-      "count": 1801
+      "count": 1800
     },
     "essex": {
       "name": "Essex County, NJ",
@@ -86,7 +86,7 @@
     "passaic": {
       "name": "Passaic County, NJ",
       "state": "NJ",
-      "count": 874
+      "count": 875
     },
     "union": {
       "name": "Union County, NJ",
@@ -101,12 +101,12 @@
     "morris": {
       "name": "Morris County, NJ",
       "state": "NJ",
-      "count": 996
+      "count": 997
     },
     "monmouth": {
       "name": "Monmouth County, NJ",
       "state": "NJ",
-      "count": 1938
+      "count": 1941
     },
     "fairfield": {
       "name": "Fairfield County, CT",
@@ -116,14 +116,14 @@
     "new_haven": {
       "name": "New Haven County, CT",
       "state": "CT",
-      "count": 1623
+      "count": 1624
     }
   },
   "by_status": {
-    "active": 36037,
-    "coming_soon": 471,
+    "active": 36042,
+    "coming_soon": 472,
     "pending": 2
   },
-  "scrape_duration_seconds": 281.8,
+  "scrape_duration_seconds": 270.4,
   "errors": []
 }
