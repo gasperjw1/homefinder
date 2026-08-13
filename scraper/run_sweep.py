@@ -33,6 +33,8 @@ except ImportError:
 REDFIN_BASE = "https://www.redfin.com"
 REDFIN_GIS = f"{REDFIN_BASE}/stingray/api/gis"
 PAGE_SIZE = 350
+# Listings with price below this are almost certainly data errors or test entries
+MIN_PRICE = 10_000
 REQUEST_DELAY = 2.0
 JSON_PREFIX = "{}&&"
 
@@ -230,6 +232,11 @@ def _parse_home(home: dict, scraped_at: str) -> Optional[Property]:
     if state not in TRI_STATE_STATES:
         return None
 
+    # Reject clearly bogus prices (data errors, test entries)
+    raw_price = _safe_int((home.get("price") or {}).get("value"))
+    if raw_price is not None and raw_price < MIN_PRICE:
+        return None
+
     address = (home.get("streetLine") or {}).get("value", "").strip()
     zip_code = str((home.get("postalCode") or {}).get("value", "") or home.get("zip", "")).strip()
 
@@ -262,7 +269,7 @@ def _parse_home(home: dict, scraped_at: str) -> Optional[Property]:
         city=home.get("city", ""),
         state=state,
         zip_code=zip_code,
-        price=_safe_int((home.get("price") or {}).get("value")),
+        price=raw_price,
         beds=_safe_int(home.get("beds")),
         baths=_safe_float(home.get("baths")),
         sqft=_safe_int((home.get("sqFt") or {}).get("value")),
