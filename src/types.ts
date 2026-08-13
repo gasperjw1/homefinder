@@ -12,7 +12,9 @@ export interface Property {
   beds: number | null
   beds_max?: number | null
   baths: number | null
+  baths_max?: number | null
   sqft: number | null
+  sqft_max?: number | null
   property_type: string
   status: string
   year_built: number | null
@@ -148,11 +150,21 @@ export function applyFilters(listings: Property[], filters: SearchCriteria): Pro
       if (!match) return false
     }
 
+    const isRent = p.listing_type === 'rent'
+
     if (filters.minPrice !== null && p.price !== null && p.price < filters.minPrice) return false
+    // For rentals, maxPrice matches if the minimum rent is within budget (building has units at that price)
     if (filters.maxPrice !== null && p.price !== null && p.price > filters.maxPrice) return false
-    if (filters.minBeds !== null && p.beds !== null && p.beds < filters.minBeds) return false
-    if (filters.minBaths !== null && p.baths !== null && p.baths < filters.minBaths) return false
-    if (filters.minSqft !== null && p.sqft !== null && p.sqft < filters.minSqft) return false
+
+    // For rentals, use max beds/baths/sqft across units so buildings with qualifying units aren't excluded
+    const effBeds = isRent ? (p.beds_max ?? p.beds) : p.beds
+    if (filters.minBeds !== null && effBeds !== null && effBeds < filters.minBeds) return false
+
+    const effBaths = isRent ? (p.baths_max ?? p.baths) : p.baths
+    if (filters.minBaths !== null && effBaths !== null && effBaths < filters.minBaths) return false
+
+    const effSqft = isRent ? (p.sqft_max ?? p.sqft) : p.sqft
+    if (filters.minSqft !== null && effSqft !== null && effSqft < filters.minSqft) return false
     if (filters.maxSqft !== null && p.sqft !== null && p.sqft > filters.maxSqft) return false
     if (filters.maxHoa !== null && p.hoa_monthly !== null && p.hoa_monthly > filters.maxHoa) return false
     if (filters.maxDom !== null && p.days_on_market !== null && p.days_on_market > filters.maxDom) return false

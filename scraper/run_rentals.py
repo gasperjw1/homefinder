@@ -84,7 +84,9 @@ class RentalProperty:
     beds: Optional[int]
     beds_max: Optional[int]
     baths: Optional[float]
+    baths_max: Optional[float]
     sqft: Optional[int]
+    sqft_max: Optional[int]
     property_type: str
     status: str
     year_built: Optional[int]
@@ -265,7 +267,9 @@ def _parse_rental(home: dict, scraped_at: str) -> Optional[RentalProperty]:
         beds=_safe_int(bed_range.get("min")),
         beds_max=_safe_int(bed_range.get("max")),
         baths=_safe_float(bath_range.get("min")),
+        baths_max=_safe_float(bath_range.get("max")),
         sqft=_safe_int(sqft_range.get("min")),
+        sqft_max=_safe_int(sqft_range.get("max")),
         property_type=prop_type,
         status="active",
         year_built=None,
