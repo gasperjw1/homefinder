@@ -1,26 +1,26 @@
 {
-  "last_updated": "2026-08-23T10:31:21.108347+00:00",
-  "total_listings": 36491,
+  "last_updated": "2026-08-24T10:43:57.540233+00:00",
+  "total_listings": 36485,
   "by_county": {
     "New York County, NY": 280,
     "Kings County, NY": 4008,
-    "Queens County, NY": 5431,
-    "Bronx County, NY": 1416,
-    "Richmond County, NY": 1199,
-    "Westchester County, NY": 1865,
-    "Nassau County, NY": 2827,
-    "Suffolk County, NY": 3701,
+    "Queens County, NY": 5430,
+    "Bronx County, NY": 1419,
+    "Richmond County, NY": 1203,
+    "Westchester County, NY": 1864,
+    "Nassau County, NY": 2828,
+    "Suffolk County, NY": 3691,
     "Rockland County, NY": 827,
-    "Bergen County, NJ": 1847,
-    "Hudson County, NJ": 1809,
-    "Essex County, NJ": 1384,
-    "Passaic County, NJ": 852,
-    "Union County, NJ": 874,
-    "Middlesex County, NJ": 1833,
-    "Morris County, NJ": 961,
-    "Monmouth County, NJ": 1949,
-    "Fairfield County, CT": 1840,
-    "New Haven County, CT": 1661
+    "Bergen County, NJ": 1843,
+    "Hudson County, NJ": 1804,
+    "Essex County, NJ": 1385,
+    "Passaic County, NJ": 857,
+    "Union County, NJ": 878,
+    "Middlesex County, NJ": 1830,
+    "Morris County, NJ": 964,
+    "Monmouth County, NJ": 1952,
+    "Fairfield County, CT": 1834,
+    "New Haven County, CT": 1662
   },
   "counties": {
     "manhattan": {
@@ -36,32 +36,32 @@
     "queens": {
       "name": "Queens County, NY",
       "state": "NY",
-      "count": 5431
+      "count": 5430
     },
     "bronx": {
       "name": "Bronx County, NY",
       "state": "NY",
-      "count": 1416
+      "count": 1419
     },
     "staten_island": {
       "name": "Richmond County, NY",
       "state": "NY",
-      "count": 1199
+      "count": 1203
     },
     "westchester": {
       "name": "Westchester County, NY",
       "state": "NY",
-      "count": 1865
+      "count": 1864
     },
     "nassau": {
       "name": "Nassau County, NY",
       "state": "NY",
-      "count": 2827
+      "count": 2828
     },
     "suffolk": {
       "name": "Suffolk County, NY",
       "state": "NY",
-      "count": 3701
+      "count": 3691
     },
     "rockland": {
       "name": "Rockland County, NY",
@@ -71,59 +71,59 @@
     "bergen": {
       "name": "Bergen County, NJ",
       "state": "NJ",
-      "count": 1847
+      "count": 1843
     },
     "hudson": {
       "name": "Hudson County, NJ",
       "state": "NJ",
-      "count": 1809
+      "count": 1804
     },
     "essex": {
       "name": "Essex County, NJ",
       "state": "NJ",
-      "count": 1384
+      "count": 1385
     },
     "passaic": {
       "name": "Passaic County, NJ",
       "state": "NJ",
-      "count": 852
+      "count": 857
     },
     "union": {
       "name": "Union County, NJ",
       "state": "NJ",
-      "count": 874
+      "count": 878
     },
     "middlesex": {
       "name": "Middlesex County, NJ",
       "state": "NJ",
-      "count": 1833
+      "count": 1830
     },
     "morris": {
       "name": "Morris County, NJ",
       "state": "NJ",
-      "count": 961
+      "count": 964
     },
     "monmouth": {
       "name": "Monmouth County, NJ",
       "state": "NJ",
-      "count": 1949
+      "count": 1952
     },
     "fairfield": {
       "name": "Fairfield County, CT",
       "state": "CT",
-      "count": 1840
+      "count": 1834
     },
     "new_haven": {
       "name": "New Haven County, CT",
       "state": "CT",
-      "count": 1661
+      "count": 1662
     }
   },
   "by_status": {
-    "active": 36169,
-    "coming_soon": 321,
+    "active": 36162,
+    "coming_soon": 322,
     "pending": 1
   },
-  "scrape_duration_seconds": 279.0,
+  "scrape_duration_seconds": 271.9,
   "errors": []
 }
