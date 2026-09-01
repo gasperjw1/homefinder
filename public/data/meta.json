@@ -1,129 +1,129 @@
 {
-  "last_updated": "2026-08-31T17:31:41.576937+00:00",
-  "total_listings": 36347,
+  "last_updated": "2026-09-01T14:42:02.723964+00:00",
+  "total_listings": 35995,
   "by_county": {
-    "New York County, NY": 281,
-    "Kings County, NY": 3973,
-    "Queens County, NY": 5442,
-    "Bronx County, NY": 1415,
-    "Richmond County, NY": 1203,
-    "Westchester County, NY": 1847,
-    "Nassau County, NY": 2792,
-    "Suffolk County, NY": 3706,
-    "Rockland County, NY": 807,
-    "Bergen County, NJ": 1820,
-    "Hudson County, NJ": 1807,
-    "Essex County, NJ": 1382,
-    "Passaic County, NJ": 856,
-    "Union County, NJ": 852,
-    "Middlesex County, NJ": 1826,
-    "Morris County, NJ": 969,
-    "Monmouth County, NJ": 1928,
-    "Fairfield County, CT": 1857,
-    "New Haven County, CT": 1665
+    "New York County, NY": 280,
+    "Kings County, NY": 3908,
+    "Queens County, NY": 5382,
+    "Bronx County, NY": 1400,
+    "Richmond County, NY": 1184,
+    "Westchester County, NY": 1836,
+    "Nassau County, NY": 2773,
+    "Suffolk County, NY": 3690,
+    "Rockland County, NY": 797,
+    "Bergen County, NJ": 1796,
+    "Hudson County, NJ": 1780,
+    "Essex County, NJ": 1380,
+    "Passaic County, NJ": 857,
+    "Union County, NJ": 845,
+    "Middlesex County, NJ": 1819,
+    "Morris County, NJ": 968,
+    "Monmouth County, NJ": 1884,
+    "Fairfield County, CT": 1848,
+    "New Haven County, CT": 1646
   },
   "counties": {
     "manhattan": {
       "name": "New York County, NY",
       "state": "NY",
-      "count": 281
+      "count": 280
     },
     "brooklyn": {
       "name": "Kings County, NY",
       "state": "NY",
-      "count": 3973
+      "count": 3908
     },
     "queens": {
       "name": "Queens County, NY",
       "state": "NY",
-      "count": 5442
+      "count": 5382
     },
     "bronx": {
       "name": "Bronx County, NY",
       "state": "NY",
-      "count": 1415
+      "count": 1400
     },
     "staten_island": {
       "name": "Richmond County, NY",
       "state": "NY",
-      "count": 1203
+      "count": 1184
     },
     "westchester": {
       "name": "Westchester County, NY",
       "state": "NY",
-      "count": 1847
+      "count": 1836
     },
     "nassau": {
       "name": "Nassau County, NY",
       "state": "NY",
-      "count": 2792
+      "count": 2773
     },
     "suffolk": {
       "name": "Suffolk County, NY",
       "state": "NY",
-      "count": 3706
+      "count": 3690
     },
     "rockland": {
       "name": "Rockland County, NY",
       "state": "NY",
-      "count": 807
+      "count": 797
     },
     "bergen": {
       "name": "Bergen County, NJ",
       "state": "NJ",
-      "count": 1820
+      "count": 1796
     },
     "hudson": {
       "name": "Hudson County, NJ",
       "state": "NJ",
-      "count": 1807
+      "count": 1780
     },
     "essex": {
       "name": "Essex County, NJ",
       "state": "NJ",
-      "count": 1382
+      "count": 1380
     },
     "passaic": {
       "name": "Passaic County, NJ",
       "state": "NJ",
-      "count": 856
+      "count": 857
     },
     "union": {
       "name": "Union County, NJ",
       "state": "NJ",
-      "count": 852
+      "count": 845
     },
     "middlesex": {
       "name": "Middlesex County, NJ",
       "state": "NJ",
-      "count": 1826
+      "count": 1819
     },
     "morris": {
       "name": "Morris County, NJ",
       "state": "NJ",
-      "count": 969
+      "count": 968
     },
     "monmouth": {
       "name": "Monmouth County, NJ",
       "state": "NJ",
-      "count": 1928
+      "count": 1884
     },
     "fairfield": {
       "name": "Fairfield County, CT",
       "state": "CT",
-      "count": 1857
+      "count": 1848
     },
     "new_haven": {
       "name": "New Haven County, CT",
       "state": "CT",
-      "count": 1665
+      "count": 1646
     }
   },
   "by_status": {
-    "active": 36014,
-    "coming_soon": 332,
+    "coming_soon": 378,
+    "active": 35616,
     "pending": 1
   },
-  "scrape_duration_seconds": 275.3,
+  "scrape_duration_seconds": 277.1,
   "errors": []
 }
