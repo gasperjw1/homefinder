@@ -1,128 +1,128 @@
 {
-  "last_updated": "2026-09-11T14:12:34.602599+00:00",
-  "total_listings": 37467,
+  "last_updated": "2026-09-12T13:30:20.720303+00:00",
+  "total_listings": 37436,
   "by_county": {
-    "New York County, NY": 259,
-    "Kings County, NY": 4194,
-    "Queens County, NY": 5545,
-    "Bronx County, NY": 1427,
-    "Richmond County, NY": 1219,
-    "Westchester County, NY": 1970,
-    "Nassau County, NY": 2813,
-    "Suffolk County, NY": 3781,
-    "Rockland County, NY": 811,
-    "Bergen County, NJ": 1852,
-    "Hudson County, NJ": 1848,
-    "Essex County, NJ": 1467,
-    "Passaic County, NJ": 920,
-    "Union County, NJ": 887,
-    "Middlesex County, NJ": 1851,
-    "Morris County, NJ": 1004,
-    "Monmouth County, NJ": 1936,
-    "Fairfield County, CT": 2035,
-    "New Haven County, CT": 1727
+    "New York County, NY": 260,
+    "Kings County, NY": 4218,
+    "Queens County, NY": 5535,
+    "Bronx County, NY": 1432,
+    "Richmond County, NY": 1225,
+    "Westchester County, NY": 1973,
+    "Nassau County, NY": 2802,
+    "Suffolk County, NY": 3749,
+    "Rockland County, NY": 807,
+    "Bergen County, NJ": 1847,
+    "Hudson County, NJ": 1842,
+    "Essex County, NJ": 1462,
+    "Passaic County, NJ": 913,
+    "Union County, NJ": 880,
+    "Middlesex County, NJ": 1850,
+    "Morris County, NJ": 987,
+    "Monmouth County, NJ": 1928,
+    "Fairfield County, CT": 2064,
+    "New Haven County, CT": 1737
   },
   "counties": {
     "manhattan": {
       "name": "New York County, NY",
       "state": "NY",
-      "count": 259
+      "count": 260
     },
     "brooklyn": {
       "name": "Kings County, NY",
       "state": "NY",
-      "count": 4194
+      "count": 4218
     },
     "queens": {
       "name": "Queens County, NY",
       "state": "NY",
-      "count": 5545
+      "count": 5535
     },
     "bronx": {
       "name": "Bronx County, NY",
       "state": "NY",
-      "count": 1427
+      "count": 1432
     },
     "staten_island": {
       "name": "Richmond County, NY",
       "state": "NY",
-      "count": 1219
+      "count": 1225
     },
     "westchester": {
       "name": "Westchester County, NY",
       "state": "NY",
-      "count": 1970
+      "count": 1973
     },
     "nassau": {
       "name": "Nassau County, NY",
       "state": "NY",
-      "count": 2813
+      "count": 2802
     },
     "suffolk": {
       "name": "Suffolk County, NY",
       "state": "NY",
-      "count": 3781
+      "count": 3749
     },
     "rockland": {
       "name": "Rockland County, NY",
       "state": "NY",
-      "count": 811
+      "count": 807
     },
     "bergen": {
       "name": "Bergen County, NJ",
       "state": "NJ",
-      "count": 1852
+      "count": 1847
     },
     "hudson": {
       "name": "Hudson County, NJ",
       "state": "NJ",
-      "count": 1848
+      "count": 1842
     },
     "essex": {
       "name": "Essex County, NJ",
       "state": "NJ",
-      "count": 1467
+      "count": 1462
     },
     "passaic": {
       "name": "Passaic County, NJ",
       "state": "NJ",
-      "count": 920
+      "count": 913
     },
     "union": {
       "name": "Union County, NJ",
       "state": "NJ",
-      "count": 887
+      "count": 880
     },
     "middlesex": {
       "name": "Middlesex County, NJ",
       "state": "NJ",
-      "count": 1851
+      "count": 1850
     },
     "morris": {
       "name": "Morris County, NJ",
       "state": "NJ",
-      "count": 1004
+      "count": 987
     },
     "monmouth": {
       "name": "Monmouth County, NJ",
       "state": "NJ",
-      "count": 1936
+      "count": 1928
     },
     "fairfield": {
       "name": "Fairfield County, CT",
       "state": "CT",
-      "count": 2035
+      "count": 2064
     },
     "new_haven": {
       "name": "New Haven County, CT",
       "state": "CT",
-      "count": 1727
+      "count": 1737
     }
   },
   "by_status": {
-    "active": 37028,
-    "coming_soon": 439
+    "active": 37046,
+    "coming_soon": 390
   },
-  "scrape_duration_seconds": 297.2,
+  "scrape_duration_seconds": 299.3,
   "errors": []
 }
