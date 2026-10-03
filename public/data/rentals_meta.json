@@ -1,6 +1,6 @@
 {
-  "last_updated": "2026-10-02T16:18:37.741247+00:00",
-  "total_listings": 926,
+  "last_updated": "2026-10-03T14:46:41.079898+00:00",
+  "total_listings": 925,
   "source": "redfin",
   "counties": {
     "manhattan": {
@@ -16,7 +16,7 @@
     "queens": {
       "name": "Queens County, NY",
       "state": "NY",
-      "count": 338
+      "count": 337
     },
     "bronx": {
       "name": "Bronx County, NY",
