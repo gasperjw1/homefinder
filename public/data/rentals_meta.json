@@ -1,17 +1,17 @@
 {
-  "last_updated": "2026-10-23T15:14:34.434846+00:00",
-  "total_listings": 956,
+  "last_updated": "2026-10-24T14:03:11.892183+00:00",
+  "total_listings": 961,
   "source": "redfin",
   "counties": {
     "manhattan": {
       "name": "New York County, NY",
       "state": "NY",
-      "count": 256
+      "count": 258
     },
     "brooklyn": {
       "name": "Kings County, NY",
       "state": "NY",
-      "count": 257
+      "count": 256
     },
     "queens": {
       "name": "Queens County, NY",
@@ -21,14 +21,14 @@
     "bronx": {
       "name": "Bronx County, NY",
       "state": "NY",
-      "count": 61
+      "count": 64
     },
     "staten_island": {
       "name": "Richmond County, NY",
       "state": "NY",
-      "count": 38
+      "count": 39
     }
   },
-  "scrape_duration_seconds": 11.5,
+  "scrape_duration_seconds": 11.8,
   "errors": []
 }
