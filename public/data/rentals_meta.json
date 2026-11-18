@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-11-17T19:14:59.186066+00:00",
+  "last_updated": "2026-11-18T18:55:29.488219+00:00",
   "total_listings": 1425,
   "source": "redfin",
   "counties": {
@@ -29,6 +29,6 @@
       "count": 163
     }
   },
-  "scrape_duration_seconds": 12.4,
+  "scrape_duration_seconds": 11.6,
   "errors": []
 }
